@@ -5,9 +5,20 @@ const apiGraphQL = `${Cypress.env("apiUrl")}/graphql`;
 
 describe("User Sign-up and Login", function () {
   beforeEach(function () {
+    // The first thing that happens inside of this hook is a custom task we have created
+    // called db:seed which is responsible for seeding our database
     cy.task("db:seed");
 
+    // Next we are using cy.intercept() to intercept every POST request to the /users route.
+    // We are then aliasing this intercept to "signup". When you see @signup being used within a test
+    // it is referring to this intercept.
     cy.intercept("POST", "/users").as("signup");
+
+    // Finally, we are using cy.intercept() to intercept every POST request to our GraphQL API endpoint.
+    // Within the body of this intercept, we have a conditional to check to see if the GraphQL
+    // operationName is equal to "CreateBankAccount", if so, we are creating an alias to this
+    // intercept as gqlCreateBankAccountMutation. When you see @gqlCreateBankAccountMutation being
+    // used within a test, it is referring to this intercept.
     cy.intercept("POST", apiGraphQL, (req) => {
       const { body } = req;
 
