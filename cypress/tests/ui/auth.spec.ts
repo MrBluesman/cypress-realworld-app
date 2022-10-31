@@ -125,18 +125,37 @@ describe("User Sign-up and Login", function () {
   });
 
   it("should display login errors", function () {
+    // An unwritten assertion of this test is to ensure that the application redirects to the
+    // sign in page if not logged in
     cy.visit("/");
 
+    // Username
+    // Once redirected, we get the username input field, and typing in a user name of User
+
+    // We then .find() the input as the element we are actually selecting is a dive that is
+    // wrapping our input.
+
+    // We then clear the input field and trigger a blur event which triggers the validation.
     cy.getBySel("signin-username").type("User").find("input").clear().blur();
+
+    // Next, we confirm that our validation is displaying the correct error message with the following assertion.
     cy.get("#username-helper-text").should("be.visible").and("contain", "Username is required");
     cy.visualSnapshot("Display Username is Required Error");
 
+    // Password
+    // We want to test the same behavior for the password input as we dud fir the username input.
+
+    // We make sure our validation fires when the user blurs out of the input
     cy.getBySel("signin-password").type("abc").find("input").blur();
+
+    // Then we will make sure the error message is displayed and has the correct message.
     cy.get("#password-helper-text")
       .should("be.visible")
       .and("contain", "Password must contain at least 4 characters");
     cy.visualSnapshot("Display Password Error");
 
+    // Finally, we want to make sure that our sign in button is disabled. Anytime we have errors on this screen,
+    // the user should not be able to click the sign in button.
     cy.getBySel("signin-submit").should("be.disabled");
     cy.visualSnapshot("Sign In Submit Disabled");
   });
