@@ -188,8 +188,12 @@ describe("User Sign-up and Login", function () {
   });
 
   it("should error for an invalid user", function () {
+    // First, we are using cy.login(), a Custom Cypress Command to use the Sign In UI to log in
+    // as a user with an invalid username and password.
     cy.login("invalidUserName", "invalidPa$$word");
 
+    // Finally, we confirm the error is displayed. The correct error message is shown with
+    // a chained expectation that the error is visible and has a specific error message.
     cy.getBySel("signin-error")
       .should("be.visible")
       .and("have.text", "Username or password is invalid");
