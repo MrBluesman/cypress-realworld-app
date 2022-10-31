@@ -72,48 +72,87 @@ describe("User Sign-up and Login", function () {
     };
 
     // Sign-up User
+
+    // First we navigate to the application root route, which will redirect us
+    // to the sign in page.
+
+    // By doing this, we are also confirming that our redirects are working as well.
     cy.visit("/");
 
+    // Next, we click on the "Sign Up" link
     cy.getBySel("signup").click();
+
+    // We then assert that the sign-up title is visible and contains "Sign Up."
+
+    // This will ensure that we are correctly routed to the sign-up page after clicking on the sign-uo link.
     cy.getBySel("signup-title").should("be.visible").and("contain", "Sign Up");
     cy.visualSnapshot("Sign Up Title");
 
+    // Sign Up Form
+    // Next, we declare a userInfo object since we will be using this data across multiple forms
+    // and expectations. Then, we fill out the sign-up form.
     cy.getBySel("signup-first-name").type(userInfo.firstName);
     cy.getBySel("signup-last-name").type(userInfo.lastName);
     cy.getBySel("signup-username").type(userInfo.username);
     cy.getBySel("signup-password").type(userInfo.password);
     cy.getBySel("signup-confirmPassword").type(userInfo.password);
     cy.visualSnapshot("About to Sign Up");
+
+    // Finally we click the Sign Up button to create our new user account.
     cy.getBySel("signup-submit").click();
+
+    // We will use cy.wait() to wait on our intercept which we aliased to @signup
+    // in the beforeEach() hook, to ensure the sign up process has completed until we proceed.
     cy.wait("@signup");
+
+    // Login
+    // After creating our user with the sign-in form, we then use cy.login() to log in as our new user.
 
     // Login User
     cy.login(userInfo.username, userInfo.password);
 
     // Onboarding
+    // After logging in, we see a multi step form that walks the user through creating a bank account
+    // as part of the user's onboarding experience.
+
+    // First, we confirm that the onboarding modal is visible and that the loading skeleton is not.
     cy.getBySel("user-onboarding-dialog").should("be.visible");
     cy.getBySel("list-skeleton").should("not.exist");
+
+    // We also confirm that the notification icon exists and then click on the next button.
     cy.getBySel("nav-top-notifications-count").should("exist");
     cy.visualSnapshot("User Onboarding Dialog");
     cy.getBySel("user-onboarding-next").click();
 
+    // On the next screen, we confirm that the modal contains the correct text.
     cy.getBySel("user-onboarding-dialog-title").should("contain", "Create Bank Account");
 
+    // We then fill our the bank account creation form and submit
     cy.getBySelLike("bankName-input").type("The Best Bank");
     cy.getBySelLike("accountNumber-input").type("123456789");
     cy.getBySelLike("routingNumber-input").type("987654321");
     cy.visualSnapshot("About to complete User Onboarding");
     cy.getBySelLike("submit").click();
 
+    // We then wait on our @gqlCreateBankAccountMutation alias to make sure the new bank account
+    // has been created before proceeding to the rest of the test.
     cy.wait("@gqlCreateBankAccountMutation");
 
+    // We then confirm we are on the final screen of the onboarding process and click the next button
+    // to close the modal.
     cy.getBySel("user-onboarding-dialog-title").should("contain", "Finished");
     cy.getBySel("user-onboarding-dialog-content").should("contain", "You're all set!");
     cy.visualSnapshot("Finished User Onboarding");
     cy.getBySel("user-onboarding-next").click();
 
+    // We then assert that the transaction view is visible, indicating that the onboarding modal
+    // has been closed.
     cy.getBySel("transaction-list").should("be.visible");
     cy.visualSnapshot("Transaction List is visible after User Onboarding");
+
+    // Logout
+    // Now the only thing left to test is to make sure our users can log out.
+    // Once they do, we will write an assertion to ensure they are redirected to the /signin page.
 
     // Logout User
     if (isMobile()) {
@@ -122,6 +161,10 @@ describe("User Sign-up and Login", function () {
     cy.getBySel("sidenav-signout").click();
     cy.location("pathname").should("eq", "/signin");
     cy.visualSnapshot("Redirect to SignIn");
+
+    // The isMobile() is a custom utility function we have written to determine if the viewport
+    // is a mobile device or not. You can find out more about how this works here.
+    // https://learn.cypress.io/real-world-examples/custom-cypress-commands
   });
 
   it("should display login errors", function () {
