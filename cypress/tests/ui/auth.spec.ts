@@ -29,7 +29,12 @@ describe("User Sign-up and Login", function () {
   });
 
   it("should redirect unauthenticated user to signin page", function () {
+    // First, we attempt to cy.visit() the URL /personal, a protected route that only logged-in
+    // users can access.
     cy.visit("/personal");
+
+    // Finally, we assert that the application redirects users who are not logged in
+    // back to the /signin page.
     cy.location("pathname").should("equal", "/signin");
     cy.visualSnapshot("Redirect to SignIn");
   });
