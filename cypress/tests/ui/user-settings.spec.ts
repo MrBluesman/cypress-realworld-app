@@ -46,13 +46,24 @@ describe("User Settings", function () {
   });
 
   it("should display user setting form errors", function () {
+    // First & Last Name Inputs
+    // First, we are looping through an array of two strings to find the firstName and lastName inputs.
+    // Remember, Cypress is just JavaScript, so we can use Array.forEach() to simplify our code
+    // and remove duplication.
     ["first", "last"].forEach((field) => {
+      // We then instruct Cypress to use .type() to enter "Abc" into each input, clear the input,
+      // and trigger the blur event on the input. We then assert that the validation error is triggered
+      // and contains the correct error message.
       cy.getBySelLike(`${field}Name-input`).type("Abc").clear().blur();
       cy.get(`#user-settings-${field}Name-input-helper-text`)
         .should("be.visible")
         .and("contain", `Enter a ${field} name`);
     });
 
+    // Email & Phone inputs
+    // Let's finish our test by asserting that the email and phone inputs also throwing
+    // the correct error messages. The code is virtually identical to the last name
+    // and first name code above. The only difference is the selector name.
     cy.getBySelLike("email-input").type("abc").clear().blur();
     cy.get("#user-settings-email-input-helper-text")
       .should("be.visible")
@@ -68,11 +79,14 @@ describe("User Settings", function () {
       .should("be.visible")
       .and("contain", "Enter a phone number");
 
+    // We have two different assertions for both the email and phone number fields since
+    // these two fields can show different error messages depending upon the error.
     cy.getBySelLike("phoneNumber-input").type("615-555-").blur();
     cy.get("#user-settings-phoneNumber-input-helper-text")
       .should("be.visible")
       .and("contain", "Phone number is not valid");
 
+    // Finally, we will make sure that the submit button is disabled since there are errors with our form.
     cy.getBySelLike("submit").should("be.disabled");
     cy.visualSnapshot("User Settings Form Errors and Submit Disabled");
   });
