@@ -52,25 +52,36 @@ describe("Bank Accounts", function () {
   });
 
   it("creates a new bank account", function () {
+    // First, we wait upon our aliased intercept @getNotifications
     cy.wait("@getNotifications");
+
+    // Next, we click on the "Bank Accounts" link in the left sidebar, depending upon if we are
+    // a mobile device or not.
+    // You can find out more info about isMobile() utility function here:
+    // https://learn.cypress.io/real-world-examples/custom-cypress-commands
     if (isMobile()) {
       cy.getBySel("sidenav-toggle").click();
     }
 
     cy.getBySel("sidenav-bankaccounts").click();
 
+    // Next, we will click on the "Create" button and write an assertion that the application
+    // has taken us to the correct screen by validating the URL.
     cy.getBySel("bankaccount-new").click();
     cy.location("pathname").should("eq", "/bankaccounts/new");
     cy.visualSnapshot("Display New Bank Account Form");
 
+    // Then, we fill out the new bank account form with our bank account information and save it.
     cy.getBySelLike("bankName-input").type("The Best Bank");
     cy.getBySelLike("routingNumber-input").type("987654321");
     cy.getBySelLike("accountNumber-input").type("123456789");
     cy.visualSnapshot("Fill out New Bank Account Form");
     cy.getBySelLike("submit").click();
 
+    // We then wait for our GraphQL mutation to create a new bank account.
     cy.wait("@gqlCreateBankAccountMutation");
 
+    // Finally, we will write an assertion that ensures that our new bank account is created successfully.
     cy.getBySelLike("bankaccount-list-item")
       .should("have.length", 2)
       .eq(1)
