@@ -11,10 +11,17 @@ describe("Bank Accounts", function () {
   const ctx: BankAccountsTestCtx = {};
 
   beforeEach(function () {
+    // The first thing we are doing is seeding our database using a custom Cypress task.
     cy.task("db:seed");
 
+    // Next, we use cy.intercept() to intercept every GET request to the /notifications route.
+    // We are then aliasing this intercept to "getNotifications". When you see @getNotifications
+    // used within a test, it is referring to this intercept.
     cy.intercept("GET", "/notifications").as("getNotifications");
 
+    // Next, we have another cy.intercept() to intercept every POST request to our GraphQL endpoint.
+    // We then have three conditionals to determine the GraphQL query and then set the appropriate
+    // alias accordingly.
     cy.intercept("POST", apiGraphQL, (req) => {
       const { body } = req;
 
@@ -31,11 +38,17 @@ describe("Bank Accounts", function () {
       }
     });
 
+    // Finally, we use a custom Cypress command cy.database() to query our database for our users.
+    // Then we use another custom Cypress command cy.loginByXState() to log in to the application
+    // using one of the users returned from the cy.database().
     cy.database("find", "users").then((user: User) => {
       ctx.user = user;
 
       return cy.loginByXstate(ctx.user.username);
     });
+
+    // You can find out how these custom Commands work in greater detail here:
+    // https://learn.cypress.io/real-world-examples/custom-cypress-commands
   });
 
   it("creates a new bank account", function () {
