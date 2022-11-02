@@ -163,24 +163,46 @@ describe("Bank Accounts", function () {
 
   // TODO: [enhancement] the onboarding modal assertion can be removed after adding "onboarded" flag to user profile
   it("renders an empty bank account list state with onboarding modal", function () {
+    // First, we wait upon our aliased intercept @getNotifications
     cy.wait("@getNotifications");
+
+    // Next, we use cy.intercept() to intercept the POST request to our GraphQL endpoint.
+    // We then determine if the POST request is a GraphQL query to "ListBankAccount".
+    // If so, we set the alias to gqlListBankAccountQuery.
     cy.intercept("POST", apiGraphQL, (req) => {
       const { body } = req;
       if (body.hasOwnProperty("operationName") && body.operationName === "ListBankAccount") {
         req.alias = "gqlListBankAccountQuery";
+
+        // Then we clear out any listBankAccount items that come back by setting this property
+        // on the response to an empty array. This is how we manipulate the response data
+        // to ensure we "render an empty bank account list", which is necessary for our test.
         req.continue((res) => {
           res.body.data.listBankAccount = [];
         });
       }
     });
 
+    // We then cy.visit() the /bankaccounts route.
     cy.visit("/bankaccounts");
+
+    // Then we wait on two intercepts - one for @getNotifications and the other for @gqlListBankAccountQuery.
+    // Remember the @getNotifications intercept happens in the beforeEach() hook.
     cy.wait("@getNotifications");
     cy.wait("@gqlListBankAccountQuery");
 
+    // Finally, we write some assertions to make sure our UI is displaying the elements that it should.
+    // We first want to ensure that the element that would normally display our bank accounts
+    // does not exist in the DOM.
     cy.getBySel("bankaccount-list").should("not.exist");
+
+    // Then, we make sure we are displaying the correct message since there are no bank accounts.
     cy.getBySel("empty-list-header").should("contain", "No Bank Accounts");
+
+    // Next, we assert that the onboarding modal window is visible.
     cy.getBySel("user-onboarding-dialog").should("be.visible");
+
+    // Finally, we assert that the user's notification count is visible.
     cy.getBySel("nav-top-notifications-count").should("exist");
     cy.visualSnapshot("User Onboarding Dialog is Visible");
   });
