@@ -92,20 +92,28 @@ describe("User Settings", function () {
   });
 
   it("updates first name, last name, email and phone number", function () {
+    // First, we need to grab all of the input fields and fill them with the data we want to update.
     cy.getBySelLike("firstName").clear().type("New First Name");
     cy.getBySelLike("lastName").clear().type("New Last Name");
     cy.getBySelLike("email").clear().type("email@email.com");
     cy.getBySelLike("phoneNumber-input").clear().type("6155551212").blur();
 
+    // We then assert that the submit is not disabled and then .click() on it.
     cy.getBySelLike("submit").should("not.be.disabled");
     cy.getBySelLike("submit").click();
 
+    // Next, we make an assertion that our intercept which is aliased to @updateUser
+    // returns the correct status code. Remember, this intercept happens inside beforeEach() hook
+    // before every test is run.
     cy.wait("@updateUser").its("response.statusCode").should("equal", 204);
 
+    // Then we use our custom isMobile() utility function to determine if this is a mobile device or not.
+    // If so, we click on the button to toggle the sidebar.
     if (isMobile()) {
       cy.getBySel("sidenav-toggle").click();
     }
 
+    // Finally, we make an assertion that our new name entered has been updated successfully.
     cy.getBySel("sidenav-user-full-name").should("contain", "New First Name");
     cy.visualSnapshot("User Settings Update Profile");
   });
