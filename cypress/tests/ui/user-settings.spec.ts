@@ -3,15 +3,33 @@ import { isMobile } from "../../support/utils";
 
 describe("User Settings", function () {
   beforeEach(function () {
+    // The first thing we are doing is seeding our database using a custom Cypress task.
     cy.task("db:seed");
 
+    // Next, we are using cy.intercept() to intercept every PATCH request to the /users/* route.
+    // We are then aliasing this intercept to "updateUser". When you see @updateUser being used
+    // within a test, it is referring to this intercept.
     cy.intercept("PATCH", "/users/*").as("updateUser");
+
+    // We are also intercepting any GET request to the /notifications route and aliasing
+    // the intercept to "getNotifications". When you see @getNotifications being used within a test,
+    // it is referring to this intercept.
     cy.intercept("GET", "/notifications*").as("getNotifications");
 
+    // We then use a custom Cypress command cy.database() to query our database for our users.
+    // Then we use another custom Cypress command cy.loginByXState() to login into the application
+    // using one of the users returned from cy.database().
+
+    // You can find out how these custom Commands work in greater detail here:
+    // https://learn.cypress.io/real-world-examples/custom-cypress-commands
     cy.database("find", "users").then((user: User) => {
       cy.loginByXstate(user.username);
     });
 
+    // Finally, we click the button to open the user settings window.
+    // We have a special utility function to determine if we are simulating a mobile device or not.
+    // You can find out how to isMobile() function works in greater detail here:
+    // https://learn.cypress.io/real-world-examples/custom-cypress-commands
     if (isMobile()) {
       cy.getBySel("sidenav-toggle").click();
     }
