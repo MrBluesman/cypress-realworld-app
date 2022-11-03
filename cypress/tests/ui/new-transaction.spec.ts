@@ -8,23 +8,27 @@ type NewTransactionTestCtx = {
   contact?: User;
 };
 
+// You can find out more information about the custom Cypress commands used here:
+// https://learn.cypress.io/real-world-examples/custom-cypress-commands
 describe("New Transaction", function () {
   const ctx: NewTransactionTestCtx = {};
 
   beforeEach(function () {
+    // The first thing we are doing is seeding our database using a custom Cypress task.
     cy.task("db:seed");
 
+    // Next, we are using cy.intercept() to intercept and alias several requests.
     cy.intercept("GET", "/users*").as("allUsers");
-
     cy.intercept("GET", "/users/search*").as("usersSearch");
-
     cy.intercept("POST", "/transactions").as("createTransaction");
-
     cy.intercept("GET", "/notifications").as("notifications");
     cy.intercept("GET", "/transactions/public").as("publicTransactions");
     cy.intercept("GET", "/transactions").as("personalTransactions");
     cy.intercept("PATCH", "/transactions/*").as("updateTransaction");
 
+    // Next, we are using a custom Cypress command cy.database() to get some users from the database.
+    // We then store some of this information in the ctx object.
+    // Lastly, we log in as one of the users returned from the cy.database() command.
     cy.database("filter", "users").then((users: User[]) => {
       ctx.allUsers = users;
       ctx.user = users[0];
