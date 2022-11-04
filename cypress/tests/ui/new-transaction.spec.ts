@@ -179,8 +179,10 @@ describe("New Transaction", function () {
   });
 
   it("submits a transaction payment and verifies the deposit for the receiver", function () {
+    // First, we click on the "New" transaction button
     cy.getBySel("nav-top-new-transaction").click();
 
+    // We then create a transactionPayload object
     const transactionPayload = {
       transactionType: "payment",
       amount: 25,
@@ -188,6 +190,9 @@ describe("New Transaction", function () {
       sender: ctx.user,
       receiver: ctx.contact,
     };
+
+    // Then, we grab the current balance from the UI, only if we are not in a mobile viewport
+    // and store it inside of the startBalance variable.
 
     // first let's grab the current balance from the UI
     let startBalance: string;
@@ -202,10 +207,17 @@ describe("New Transaction", function () {
         });
     }
 
+    // We then create a new transaction using a custom Cypress command cy.createTransaction
+    // with the transactionPayload object we created earlier.
     cy.createTransaction(transactionPayload);
+
+    // We then wait on the @createTransaction intercept
+    // and assert the "Create Another Transaction" is visible
     cy.wait("@createTransaction");
     cy.getBySel("new-transaction-create-another-transaction").should("be.visible");
 
+    // We then make sure we are not in a mobile viewport and assert that the user balance
+    // has been updated from the transaction we just created.
     if (!isMobile()) {
       // make sure the new balance is displayed
       cy.get("[data-test=sidenav-user-balance]").should(($el) => {
@@ -217,16 +229,21 @@ describe("New Transaction", function () {
     }
     cy.visualSnapshot("Transaction Payment Submitted Notification");
 
+    // We then switch users by using a custom command cy.switchUserByXstate()
     cy.switchUserByXstate(ctx.contact!.username);
 
+    // We then use a 3rd party library called Dinero.js to format the
+    // updatedAccountBalance property.
     const updatedAccountBalance = Dinero({
       amount: ctx.contact!.balance + transactionPayload.amount * 100,
     }).toFormat();
 
+    // If we are in a mobile viewport we click the button to open the sidebar.
     if (isMobile()) {
       cy.getBySel("sidenav-toggle").click();
     }
 
+    // Finally, we assert that the user's balance contains the correct amount.
     cy.getBySelLike("user-balance").should("contain", updatedAccountBalance);
     cy.visualSnapshot("Verify Updated Sender Account Balance");
   });
