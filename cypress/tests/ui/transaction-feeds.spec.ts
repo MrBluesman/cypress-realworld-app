@@ -20,9 +20,21 @@ type TransactionFeedsCtx = {
 };
 
 describe("Transaction Feed", function () {
+  // ctx & feedViews Objects
+
+  // The ctx object is an empty object that we will later populate within beforeEach() below
+  // with some user data used through the tests in this file.
   const ctx: TransactionFeedsCtx = {};
 
+  // The feedViews object contains various information for the different views depending upon
+  // which transaction feed we are testing.
   const feedViews = {
+    // For example, for the public feed views object.
+    // - The tab property is the name of the selector we will use to grab the correct element.
+    // - The tabLabel is the text contained within the <label> element for the tab.
+    // - The routeAlias is the alias name we are using for cy.intercept().
+    // - The service is the name of the service we are using for a custom Cypress command
+    //   cy.nextTransactionFeedPage(feed.service, pageData.totalPages); around line 203.
     public: {
       tab: "public-tab",
       tabLabel: "everyone",
@@ -44,17 +56,24 @@ describe("Transaction Feed", function () {
   };
 
   beforeEach(function () {
+    // First, we are using a custom Cypress task to seed our database.
     cy.task("db:seed");
 
+    // Next, we use cy.intercept() to intercept various requests and alias them
+    // using the data within the feedViews object.
     cy.intercept("GET", "/notifications").as("notifications");
     cy.intercept("GET", "/transactions*").as(feedViews.personal.routeAlias);
     cy.intercept("GET", "/transactions/public*").as(feedViews.public.routeAlias);
     cy.intercept("GET", "/transactions/contacts*").as(feedViews.contacts.routeAlias);
 
+    // Then, we use a custom Cypress command cy.database() to retrieve some users from the database.
     cy.database("filter", "users").then((users: User[]) => {
+      // We then use the users returned from the database and add them to our ctx object later in our tests.
       ctx.user = users[0];
       ctx.allUsers = users;
 
+      // Finally, we are using another custom Cypress command cy.loginByXstate() to login as
+      // one of the users returned from the database.
       cy.loginByXstate(ctx.user.username);
     });
   });

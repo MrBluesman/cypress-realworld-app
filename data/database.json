@@ -9855,19 +9855,6 @@
       "requestResolvedAt": "",
       "createdAt": "2019-06-27T22:24:04.794Z",
       "modifiedAt": "2020-05-21T04:58:44.494Z"
-    },
-    {
-      "id": "K-ARj8zvM",
-      "uuid": "8c555725-aacb-49ef-8960-0272f2316ef5",
-      "amount": 9500,
-      "description": "Fancy Hotel 🏨",
-      "receiverId": "qywYp6hS0U",
-      "senderId": "t45AiwidW",
-      "privacyLevel": "public",
-      "status": "pending",
-      "requestStatus": "pending",
-      "createdAt": "2022-11-05T07:18:15.287Z",
-      "modifiedAt": "2022-11-05T07:18:15.287Z"
     }
   ],
   "likes": [
@@ -10444,16 +10431,6 @@
       "isRead": false,
       "createdAt": "2019-10-19T20:50:49.292Z",
       "modifiedAt": "2020-05-21T21:00:50.192Z"
-    },
-    {
-      "id": "pll-4QNApG",
-      "uuid": "e6197bca-9358-4b22-b917-7c9535ed75f8",
-      "userId": "qywYp6hS0U",
-      "transactionId": "K-ARj8zvM",
-      "status": "requested",
-      "isRead": false,
-      "createdAt": "2022-11-05T07:18:15.289Z",
-      "modifiedAt": "2022-11-05T07:18:15.289Z"
     }
   ],
   "banktransfers": [
