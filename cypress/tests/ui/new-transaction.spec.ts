@@ -300,6 +300,8 @@ describe("New Transaction", function () {
   });
 
   context("searches for a user by attribute", function () {
+    // First, we create a searchAttrs array that contains all of the user attributes
+    // we intend to search for
     const searchAttrs: (keyof User)[] = [
       "firstName",
       "lastName",
@@ -308,23 +310,50 @@ describe("New Transaction", function () {
       "phoneNumber",
     ];
 
+    // Next we have a beforeEach() hook that clicks on the "New" transaction button and waits for
+    // our @allUsers intercept. Remember, this intercept occurs in the beforeEach hook at the top
+    // of this spec file.
     beforeEach(function () {
       cy.getBySelLike("new-transaction").click();
       cy.wait("@allUsers");
     });
 
+    // Then, we are looping through the searchAttrs array to dynamically create our tests,
+    // one for each attribute in the array. Remember that Cypress is just JavaScript,
+    // which allows us to dynamically generate our tests instead of manually creating a test
+    // for each attribute.
     searchAttrs.forEach((attr: keyof User) => {
+      // Within our .forEach(), you can see that the first thing we do is create our .it()
+      // test and pass in the attribute as the test name.
       it(attr, function () {
+        // Next, we grab a user from our ctx object created in the .beforeEach() at the top
+        // of this spec file.
         const targetUser = ctx.allUsers![2];
 
+        // Then we use cy.log() to output a custom message to the Cypress Command Log in the test runner.
+        // This makes it easy for us to see what is happening in the test runner
+        // and is helpful for debugging.
         cy.log(`Searching by **${attr}**`);
+
+        // We then perform a search for the specific attribute.
         cy.getBySel("user-list-search-input").type(targetUser[attr] as string, { force: true });
+
+        // Next, we wait upon the @usersSearch intercept, which occurs in the .beforeEach()
+        // at the top of the spec file.
         cy.wait("@usersSearch")
+          // Then we grab the results from the response.body and write an assertion to make sure
+          // we have some results, i.e the results array should not be empty.
+
           // make sure the backend returns some results
           .its("response.body.results")
           .should("have.length.gt", 0)
           .its("length")
           .then((resultsN) => {
+            // Then, we get the .length of the results array and write an assertion to make sure
+            // our UI displays the correct number of results returned from our back-end.
+            // We also have an assertion that the first item displayed in the search is
+            // the attribute we searched for.
+
             cy.getBySelLike("user-list-item")
               // make sure the list of results is fully updated
               // and shows the number of results returned from the backend
@@ -335,6 +364,7 @@ describe("New Transaction", function () {
 
         cy.visualSnapshot(`User List for Search: ${attr} = ${targetUser[attr]}`);
 
+        // Finally, we clear focused input & make sure that the users list is empty.
         cy.focused().clear();
         cy.getBySel("users-list").should("be.empty");
         cy.visualSnapshot("User List Clear Search");
