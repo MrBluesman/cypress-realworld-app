@@ -77,11 +77,29 @@ describe("Transaction Feed", function () {
       cy.loginByXstate(ctx.user.username);
     });
   });
+
+  // You can find out more information about the custom Cypress commands used in this test here:
+  // https://learn.cypress.io/real-world-examples/custom-cypress-commands
+
+  // This test is relatively straightforward, and we will not be covering every single line.
+  // The general purpose of this test is to make sure that certain elements are either visible
+  // or invisible depending upon whether we are in a mobile viewport of not.
+  // We also use several cy.visualSnapshot() to confirm that our UI has not changed.
+  // Tests like these are essential as they demonstrate the importance of testing what is there
+  // and what should not be there. Remember, you dont want to only test for the positive
+  // or "happy paths"; you also want to test the negative or "unhappy paths."
   describe("app layout and responsiveness", function () {
     it("toggles the navigation drawer", function () {
+      // The first thing we are doing is waiting on a couple of intercepts that occur
+      // in the beforeEach() hook.
       cy.wait("@notifications");
       cy.wait("@publicTransactions");
+
+      // Next, we use our isMobile() utility method to determine if this test is being run
+      // in a mobile viewport or not.
       if (isMobile()) {
+        // If we are in a mobile viewport, then we verify the certain elements are visible
+        // or not visible when we click on various buttons.
         cy.getBySel("sidenav-home").should("not.exist");
         cy.visualSnapshot("Mobile Initial Side Navigation Not Visible");
         cy.getBySel("sidenav-toggle").click();
@@ -95,6 +113,8 @@ describe("Transaction Feed", function () {
         cy.getBySel("sidenav-home").click().should("not.exist");
         cy.visualSnapshot("Mobile Toggle Side Navigation Not Visible");
       } else {
+        // If we are not in a mobile viewport, then verify that certain elements are visible
+        // or not for desktop and greater viewports.
         cy.getBySel("sidenav-home").should("be.visible");
         cy.visualSnapshot("Desktop Side Navigation Visible");
         cy.getBySel("sidenav-toggle").click();
