@@ -343,7 +343,13 @@ describe("Transaction Feed", function () {
     });
   });
 
+  // You can find out more information about the custom Cypress commands used in this test here:
+  // https://learn.cypress.io/real-world-examples/custom-cypress-commands
+
   describe("filters transaction feeds by date range", function () {
+    // First, we are checking to see if our test is being run inside of a mobile viewport.
+    // If so, we ensure that the data range picker works properly on a mobile device by clicking
+    // on it to open it, confirming that it is open, and then closing it.
     if (isMobile()) {
       it("closes date range picker modal", () => {
         cy.getBySelLike("filter-date-range-button").click({ force: true });
@@ -355,23 +361,58 @@ describe("Transaction Feed", function () {
       });
     }
 
+    // Next, we loop through each property inside the feedViews object, which we defined
+    // in the beforeEach() at the top of the spec file.
+
+    // const feedViews = {
+    //     public: {
+    //       tab: "public-tab",
+    //       tabLabel: "everyone",
+    //       routeAlias: "publicTransactions",
+    //       service: "publicTransactionService",
+    //     },
+    //     contacts: {
+    //       tab: "contacts-tab",
+    //       tabLabel: "friends",
+    //       routeAlias: "contactsTransactions",
+    //       service: "contactTransactionService",
+    //     },
+    //     personal: {
+    //       tab: "personal-tab",
+    //       tabLabel: "mine",
+    //       routeAlias: "personalTransactions",
+    //       service: "personalTransactionService",
+    //     },
+    //   };
     _.each(feedViews, (feed, feedName) => {
+      // We then create a test for each feedView dynamically.
       it(`filters ${feedName} transaction feed by date range`, function () {
+        // Next, we use a custom Cypress command cy.database() to find some transactions from the database.
         cy.database("find", "transactions").then((transaction: Transaction) => {
           const dateRangeStart = startOfDay(new Date(transaction.createdAt));
           const dateRangeEnd = endOfDayUTC(addDays(dateRangeStart, 1));
 
+          // Then, we click on the appropriate tab for our feed.
           cy.getBySelLike(feed.tab).click().should("have.class", "Mui-selected");
 
+          // Next we wait on the intercept associated with the feed.
           cy.wait(`@${feed.routeAlias}`).its("response.body.results").as("unfilteredResults");
 
+          // Next, we use another custom Cypress command cy.pickDateRange() to pick select the dates we want.
           cy.pickDateRange(dateRangeStart, dateRangeEnd);
 
+          // Then, we wait on the intercept associated with the feed and grab the resylts from the response.
           cy.wait(`@${feed.routeAlias}`)
             .its("response.body.results")
             .then((transactions: Transaction[]) => {
+              // We then confirm that all of the results are displayed in the UI
               cy.getBySelLike("transaction-item").should("have.length", transactions.length);
 
+              // Then we loop through all of the transactions and make sure that all of
+              // the transaction dates are within the correct range.
+
+              // - startOfDayUTC is a utility function that can be found in src/utils/transactionUtils.ts
+              // - isWithinInterval is a function from the date-fns library. https://date-fns.org
               transactions.forEach(({ createdAt }) => {
                 const createdAtDate = startOfDayUTC(new Date(createdAt));
 
@@ -389,12 +430,17 @@ describe("Transaction Feed", function () {
               cy.visualSnapshot("Date Range Filtered Transactions");
             });
 
+          // We then use cy.log() to output a custom message to the Cypress Command Log.
           cy.log("Clearing date range filter. Data set should revert");
+
+          // Next, we clear the date range picker.
           cy.getBySelLike("filter-date-clear-button").click({
             force: true,
           });
           cy.getBySelLike("filter-date-range-button").should("contain", "ALL");
 
+          // Finally, we make sure that all of the transactions are displayed now that we have
+          // cleared the date range picker, meaning that we are no longer filtering the results.
           cy.get("@unfilteredResults").then((unfilteredResults) => {
             cy.wait(`@${feed.routeAlias}`)
               .its("response.body.results")
