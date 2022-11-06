@@ -547,19 +547,31 @@ describe("Transaction Feed", function () {
   });
 
   describe("Feed Item Visibility", () => {
+    // You can find out more information about the custom Cypress commands used in this test here:
+    // https://learn.cypress.io/real-world-examples/custom-cypress-commands
     it("mine feed only shows personal transactions", function () {
+      // First, we are using a custom Cypress command cy.database() to filter through the contacts
+      // of the user from the ctx object. Remember, the ctx object's data is setup
+      // in the beforeEach() hook at the top of this spec file.
+      // We .map() over all of the user's contacts and store their id's in the ctx object.
       cy.database("filter", "contacts", { userId: ctx.user!.id }).then((contacts: Contact[]) => {
         ctx.contactIds = contacts.map((contact) => contact.contactUserId);
       });
 
+      // Next, we click on the personal feed view tab
       cy.getBySelLike(feedViews.personal.tab).click();
 
+      // Then, we wait upon the @personalTransactions intercept, grab the results from the body
+      // of the response and iterate over each transaction. We then make an assertion to make sure
+      // the response only returns transactions associated with our user.
       cy.wait("@personalTransactions")
         .its("response.body.results")
         .each((transaction: Transaction) => {
           const transactionParticipants = [transaction.senderId, transaction.receiverId];
           expect(transactionParticipants).to.include(ctx.user!.id);
         });
+
+      // Finally, we make sure that the loading skeleton does not exist in the DOM.
       cy.getBySel("list-skeleton").should("not.exist");
       cy.visualSnapshot("Personal Transactions");
     });
