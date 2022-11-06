@@ -124,53 +124,142 @@ describe("Transaction Feed", function () {
     });
   });
 
+  // You can find out more information about the custom Cypress commands used in this test here:
+  // https://learn.cypress.io/real-world-examples/custom-cypress-commands
   describe("renders and paginates all transaction feeds", function () {
     it("renders transactions item variations in feed", function () {
+      // First, we are using cy.intercept() to intercept any GET request to the
+      // transactions/public* route.
       cy.intercept("GET", "/transactions/public*", {
+        // We are also adding two additional headers to the response's headers. These headers will be
+        // appended to the original response headers, leaving the original ones intact.
         headers: {
           "X-Powered-By": "Express",
           Date: new Date().toString(),
         },
+        // We are then using a fixture to mock the response's payload.
+        // This fixture can be found inside of cypress/fixtures.
         fixture: "public-transactions.json",
       }).as("mockedPublicTransactions");
 
+      // Then we visit the root route to trigger the GET request to /transactions/public
       // Visit page again to trigger call to /transactions/public
       cy.visit("/");
 
+      // Next, we wait for two intercepts.
       cy.wait("@notifications");
+
+      // We then grab the results from the @mockedPublicTransactions intercept.
+      // Remember, these results are coming from our public-transactions.json fixture.
+      // .its(response.body.results)
       cy.wait("@mockedPublicTransactions")
         .its("response.body.results")
         .then((transactions) => {
+          // Then, we have a function called getTransactionFromEl which finds the transactionID
+          // from the transaction element in the DOM. This function is a little complicated,
+          // so let's break it down line by line.
           const getTransactionFromEl = ($el: JQuery<Element>): TransactionResponseItem => {
+            // Our function getTransactionFromEl accepts a jQuery element as a parameter
+            // and returns a TransactionResponseItem which is a TypeScript interface which
+            // can be found in /src/models/transaction.ts around line 50.
+
+            // Next, we get the transactionID from the data-test attribute from the DOM.
+            // For example the HTML for one of our transactions looks like this:
+
+            // <li
+            //     class="MuiListItem-root MuiListItem-gutters MuiListItem-alignItemsFlexStart"
+            //   data-test="transaction-item-183VHWyuQMS">
+
+            // Once we have the string located within the data-test attrivute, we use .split()
+            // to grab the transaction ID
+
+            // "transaction-item-183VHWyuQMS".split("transaction-item-")[1]
+            // 183VHWyuQMS
             const transactionId = $el.data("test").split("transaction-item-")[1];
+
+            // Then, we use _.find() from Lodash https://lodash.com/docs/4.17.15#find
+            // to locate the transaction from the @mockedPublicTransactions request
+            // using the ID we just located from the DOM.
             return _.find(transactions, (transaction) => {
               return transaction.id === transactionId;
             })!;
           };
 
+          // We then use cy.log() to output a custom message to the Cypress Command Log.
           cy.log("🚩Testing a paid payment transaction item");
+
+          // Next, we are looking for a "paid" transaction, which in this case is the first transaction in the list.
           cy.contains("[data-test*='transaction-item']", "paid").within(($el) => {
+            // We then grab the transaction with our getTransactionFromEl function.
+            // Remember, this is going to return the transaction from our intercepted response,
+            // which is a fixture,
+
+            // Here is the transaction from the fixture:
+            // {
+            //       "amount": 8647,
+            //       "balanceAtCompletion": 8958,
+            //       "createdAt": "2019-12-10T21:38:16.311Z",
+            //       "description": "Payment: db4uxOm7d to IMbeyzHTj9",
+            //       "id": "si_aNEMbyCA",
+            //       "modifiedAt": "2020-05-06T08:15:48.263Z",
+            //       "privacyLevel": "private",
+            //       "receiverId": "IMbeyzHTj9",
+            //       "requestResolvedAt": "2020-06-09T19:01:15.675Z",
+            //       "requestStatus": "",
+            //       "senderId": "db4uxOm7d",
+            //       "source": "GYDJUNEaOK7",
+            //       "status": "complete",
+            //       "uuid": "41754166-ea5b-448a-9a8a-374ce387c714",
+            //       "receiverName": "Kevin",
+            //       "senderName": "Amir",
+            //       "likes": [],
+            //       "comments": []
+            // },
             const transaction = getTransactionFromEl($el);
+
+            // Then we use a 3rd part library called Dinero.js https://dinerojs.com
+            // to properly format the amount.
+
+            // This will convert the "amount": 8647 from the fixture above to $86.47
             const formattedAmount = Dinero({
               amount: transaction.amount,
             }).toFormat();
 
+            // Then we write an expectation asserting that our transactions status must be either
+            // "pending" or "complete". Both of these statuses are coming from a TypeScript enum
+            // which can be found in src/models/transaction.ts around line 4.
+
+            // export enum TransactionStatus {
+            //   pending = "pending",
+            //   incomplete = "incomplete",
+            //   complete = "complete",
+            // }
             expect([TransactionStatus.pending, TransactionStatus.complete]).to.include(
               transaction.status
             );
 
+            // We then write another assertion to make sure that the requestStatus is empty.
             expect(transaction.requestStatus).to.be.empty;
 
+            // We then have a couple assertions to make sure that the UI's likes and comment count are correct.
             cy.getBySelLike("like-count").should("have.text", `${transaction.likes.length}`);
             cy.getBySelLike("comment-count").should("have.text", `${transaction.comments.length}`);
 
+            // Next, we confirm that the sender and receiver of the transactions are the correct persons.
             cy.getBySelLike("sender").should("contain", transaction.senderName);
             cy.getBySelLike("receiver").should("contain", transaction.receiverName);
 
+            // Finally, we are asserting that the amount displayed in the DOM is correct and has
+            // the correct css. In this case of this transaction amount, since it is negative,
+            // the UI should display a "-" before the dollar amount and make it red.
             cy.getBySelLike("amount")
               .should("contain", `-${formattedAmount}`)
               .should("have.css", "color", "rgb(255, 0, 0)");
           });
+
+          // Now that you understand how we are testing for "paid" transaction items, you can see
+          // we are more or less doing the same thing for both "charged" and "requested" transactions
+          // in the rest of the test.
 
           cy.log("🚩Testing a charged payment transaction item");
           cy.contains("[data-test*='transaction-item']", "charged").within(($el) => {
