@@ -7,17 +7,27 @@ type NotificationsCtx = {
   userC: User;
 };
 
+// You can find out more information about the custom Cypress commands used here:
+// https://learn.cypress.io/real-world-examples/custom-cypress-commands
+
 describe("Notifications", function () {
   const ctx = {} as NotificationsCtx;
 
   beforeEach(function () {
+    // First, we are using a custom Cypress task to seed our database.
     cy.task("db:seed");
 
+    // Then, we are using cy.intercept() to intercept several requests and aliasing them to be used
+    // later on withing our tests.
     cy.intercept("GET", "/notifications*").as("getNotifications");
     cy.intercept("POST", "/transactions").as("createTransaction");
     cy.intercept("PATCH", "/notifications/*").as("updateNotification");
     cy.intercept("POST", "/comments/*").as("postComment");
 
+    // Finally, we are using another custom Cypress command cy.database() to retrieve some users
+    // from the database and store them on the ctx object. This object and these users will be used
+    // later on within our tests. This is an example of "Data Driven Testing" where instead of
+    // hard coding your data, you use real data from a remote source, which in this case is our database.
     cy.database("filter", "users").then((users: User[]) => {
       ctx.userA = users[0];
       ctx.userB = users[1];
