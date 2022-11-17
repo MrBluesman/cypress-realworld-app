@@ -51,9 +51,19 @@ describe("Transaction View", function () {
     cy.wait("@personalTransactions");
   });
 
+  // You can find out more information about the custom Cypress commands used here:
+  // https://learn.cypress.io/real-world-examples/custom-cypress-commands
+
+  // This is a relatively straightforward test in which we are making sure that the transaction
+  // navigation tabs are hidden on the transaction view page.
   it("transactions navigation tabs are hidden on a transaction view page", function () {
+    // The first thing we do is click on the first transaction and confirm that the application
+    // routes us to that transactions page.
     cy.getBySelLike("transaction-item").first().click();
     cy.location("pathname").should("include", "/transaction");
+
+    // Finally, we confirm that the transaction tabs are not in the DOM and that
+    // the transaction header is visible.
     cy.getBySel("nav-transaction-tabs").should("not.exist");
     cy.getBySel("transaction-detail-header").should("be.visible");
     cy.visualSnapshot("Transaction Navigation Tabs Hidden");
