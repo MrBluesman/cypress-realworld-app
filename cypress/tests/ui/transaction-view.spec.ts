@@ -111,12 +111,21 @@ describe("Transaction View", function () {
     cy.visualSnapshot("Transaction Accepted");
   });
 
+  // You can find out more information about the custom Cypress commands used here:
+  // https://learn.cypress.io/real-world-examples/custom-cypress-commands
   it("rejects a transaction request", function () {
+    // First, we visit the transaction screen for the specific transaction we looked up within
+    // the beforeEach() hook at the top of the spec file. Then we wait upon the @getTransaction intercept.
     cy.visit(`/transaction/${ctx.transactionRequest!.id}`);
     cy.wait("@getTransaction");
 
+    // Next, we click on the "Reject request" button and wait on the @updateTransaction intercept
+    // and confirm that this intercepts status code is 204.
     cy.getBySelLike("reject-request").click();
     cy.wait("@updateTransaction").its("response.statusCode").should("equal", 204);
+
+    // Finally, we make sure the reject request button is no longer in the DOM and that
+    // the transaction detail header is visible.
     cy.getBySelLike("reject-request").should("not.exist");
     cy.getBySel("transaction-detail-header").should("be.visible");
     cy.visualSnapshot("Transaction Rejected");
