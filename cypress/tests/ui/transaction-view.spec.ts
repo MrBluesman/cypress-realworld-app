@@ -131,15 +131,25 @@ describe("Transaction View", function () {
     cy.visualSnapshot("Transaction Rejected");
   });
 
+  // You can find out more information about the custom Cypress commands used here:
+  // https://learn.cypress.io/real-world-examples/custom-cypress-commands
   it("does not display accept/reject buttons on completed request", function () {
+    // The first thing we do is retrieve a "complete" transaction from the database associated
+    // with our authenticatedUser, which we set up in the beforeEach() hook at the top of this spec file.
+    // This test is another example of "Data-Driven Test.". Rather than hard-coding this information,
+    // we are using real data from our database to drive our test.
     cy.database("find", "transactions", {
       receiverId: ctx.authenticatedUser!.id,
       status: "complete",
       requestStatus: "accepted",
     }).then((transactionRequest) => {
+      // Once we locate the transaction, we then navigate the application to the specific transactions screen.
       cy.visit(`/transaction/${transactionRequest!.id}`);
 
+      // Next, we wait for the @getNotifications intercept.
       cy.wait("@getNotifications");
+
+      // Finally, we confirm that certain elements are visible or not visible.
       cy.getBySel("nav-top-notifications-count").should("be.visible");
       cy.getBySel("transaction-detail-header").should("be.visible");
       cy.getBySel("transaction-accept-request").should("not.exist");
