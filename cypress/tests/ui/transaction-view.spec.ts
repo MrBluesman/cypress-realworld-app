@@ -5,12 +5,19 @@ type NewTransactionCtx = {
   authenticatedUser?: User;
 };
 
+// You can find out more information about the custom Cypress commands used here:
+// https://learn.cypress.io/real-world-examples/custom-cypress-commands
+
 describe("Transaction View", function () {
+  // The ctx object is an empty object that we will later populate within the beforeEach()
+  // with some user data used through the tests in this file.
   const ctx: NewTransactionCtx = {};
 
   beforeEach(function () {
+    // First, we are using a custom Cypress task to seed our database.
     cy.task("db:seed");
 
+    // Next, we use cy.intercept() to intercept various requests and aliasing them.
     cy.intercept("GET", "/transactions*").as("personalTransactions");
     cy.intercept("GET", "/transactions/public*").as("publicTransactions");
     cy.intercept("GET", "/transactions/*").as("getTransaction");
@@ -20,6 +27,10 @@ describe("Transaction View", function () {
     cy.intercept("GET", "/notifications").as("getNotifications");
     cy.intercept("GET", "/bankAccounts").as("getBankAccounts");
 
+    // Then, we use a custom Cypress command cy.database() to retrieve the users from our database.
+    // We then add this user to our ctx object and log in with cy.loginByXState().
+    // We then perform another query to our database using cy.database() to find all of the "pending"
+    // transactions for our user and store said pending transaction on the ctx object.
     cy.database("find", "users").then((user: User) => {
       ctx.authenticatedUser = user;
 
@@ -35,6 +46,7 @@ describe("Transaction View", function () {
       });
     });
 
+    // Finally, we click on the personal transaction tab and wait on the @personalTransactions intercept.
     cy.getBySel("nav-personal-tab").click();
     cy.wait("@personalTransactions");
   });

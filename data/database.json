@@ -9855,19 +9855,6 @@
       "requestResolvedAt": "",
       "createdAt": "2019-06-27T22:24:04.794Z",
       "modifiedAt": "2020-05-21T04:58:44.494Z"
-    },
-    {
-      "id": "o11Ri5Tct",
-      "uuid": "dc2411ae-a265-41a2-9ded-498627016cd8",
-      "amount": 30000,
-      "description": "🛫🛬 Airfare",
-      "receiverId": "bDjUb4ir5O",
-      "senderId": "t45AiwidW",
-      "privacyLevel": "public",
-      "status": "pending",
-      "requestStatus": "pending",
-      "createdAt": "2022-11-15T20:58:40.907Z",
-      "modifiedAt": "2022-11-15T20:58:40.908Z"
     }
   ],
   "likes": [
@@ -10444,16 +10431,6 @@
       "isRead": false,
       "createdAt": "2019-10-19T20:50:49.292Z",
       "modifiedAt": "2020-05-21T21:00:50.192Z"
-    },
-    {
-      "id": "yNd3ecryaM",
-      "uuid": "dbe9ce9e-82c9-4167-864a-46f45e0b995c",
-      "userId": "bDjUb4ir5O",
-      "transactionId": "o11Ri5Tct",
-      "status": "requested",
-      "isRead": false,
-      "createdAt": "2022-11-15T20:58:40.909Z",
-      "modifiedAt": "2022-11-15T20:58:40.909Z"
     }
   ],
   "banktransfers": [
